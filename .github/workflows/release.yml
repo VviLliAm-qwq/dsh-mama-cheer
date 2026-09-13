@@ -46,14 +46,18 @@ jobs:
         run: npm install -g npm@11
 
       - name: Publish to npm
-        run: npm publish --access public --provenance
+        run: |
+          # ONE-TIME first publish only (the whole `env:` block below plus this
+          # line are deleted once the trusted publisher is registered). npm
+          # trusted publishing cannot be configured for a package that does not
+          # exist yet, so this release authenticates with an Automation token —
+          # and NODE_AUTH_TOKEN alone is not enough: npm only reads it when an
+          # .npmrc entry interpolates it, which `setup-node` writes only when
+          # `registry-url` is set. Writing the line here keeps the blast radius
+          # to this one step and leaves the OIDC-only shape intact afterwards.
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > "$HOME/.npmrc"
+          npm publish --access public --provenance
         env:
-          # ONE-TIME first publish only. npm trusted publishing cannot be
-          # configured for a package that does not exist yet, so the very first
-          # release authenticates with an Automation token from the NPM_TOKEN
-          # repository secret. Delete this `env:` block (and the secret) once the
-          # package exists and the trusted publisher is registered — from then on
-          # the OIDC exchange above is the only credential this workflow needs.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
