@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # engines: ^22.19 || >=24. The suite is pure logic plus fake-agent
+        # delivery assertions, so every supported OS runs it; the lowest
+        # supported line only needs one runner.
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [24]
+        include:
+          - os: ubuntu-latest
+            node: 22
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      # Pure ESM with no build step: lib/ is the published source.
+      - run: pnpm check:encoding
+      - run: pnpm test
+      - run: pnpm validate:manifest
+      - run: pnpm pack:verify

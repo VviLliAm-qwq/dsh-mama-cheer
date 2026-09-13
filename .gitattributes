@@ -1,0 +1,3 @@
+# Normalize line endings: the package ships JavaScript, JSON and YAML that
+# other tools parse. The repository keeps LF everywhere.
+* text=auto eol=lf
