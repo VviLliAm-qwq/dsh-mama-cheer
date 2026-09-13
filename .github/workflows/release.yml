@@ -47,6 +47,14 @@ jobs:
 
       - name: Publish to npm
         run: npm publish --access public --provenance
+        env:
+          # ONE-TIME first publish only. npm trusted publishing cannot be
+          # configured for a package that does not exist yet, so the very first
+          # release authenticates with an Automation token from the NPM_TOKEN
+          # repository secret. Delete this `env:` block (and the secret) once the
+          # package exists and the trusted publisher is registered — from then on
+          # the OIDC exchange above is the only credential this workflow needs.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
         run: gh release create "${GITHUB_REF_NAME}" --generate-notes --latest
